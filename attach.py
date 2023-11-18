@@ -35,11 +35,12 @@ for file in files:
   with open(file, "rb") as attachment:
     attachment_content = f"\r\nContent-Type: application/octet-stream; name={file}\r\n" \
                         f"Content-Transfer-Encoding: base64\r\n" \
-                        f"Content-Disposition: attachment; filename={file}\r\n\r\n"
+                        f"Content-Disposition: attachment; filename={file}\r\n\r\n" \
+                        f"attached-file\r\n\r\n"
     s.send(attachment_content.encode())
 
     while True:
-      chunk = attachment.read(1024)
+      chunk = attachment.read(1023)
       if not chunk:
           break
       encoded_chunk = base64.b64encode(chunk).decode()
