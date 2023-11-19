@@ -12,29 +12,23 @@ def check(base64_string):
   except:
     return 0
 
-def get_attach(base64_string):
-  if base64_string.startswith('data:image'):
-    base64_string = base64_string.split(',')[1]
-  
-  print(base64_string )
+def get_attach(b):
+  if b.startswith('data:image'):
+    b = b.split(',')[1]
+
+  print("1")
+  print(b)
 
   try:
-    image_data = base64.b64decode(base64_string)
+    image_data = base64.b64decode(b)
     image_buffer = BytesIO(image_data)
-    # image = Image.open(image_buffer)
-
-    print("yes")
+    image = Image.open(image_buffer)
     return image
-  except:
+  except Exception as e:
     print("none")
     return None
 
-  # Open the image using Pillow
-  # image = Image.open(image_buffer)
-
-  # return image
-
-email_address = "ttmq38@gmail.com"
+email_address = "abc@gmail.com"
 password = "your_password"
 
 pop_conn = socket.socket()
@@ -64,8 +58,8 @@ response = pop_conn.recv(1024).decode()
 
 # for i in range(1, len(message_list.split()), 2):
 
-# pop_conn.send(f'RETR {message_list.split()[i]}\r\n'.encode())
-pop_conn.send(f'RETR 27\r\n'.encode())
+  # pop_conn.send(f'RETR {message_list.split()[i]}\r\n'.encode())
+pop_conn.send(f'RETR 9\r\n'.encode())
 email_data = b''
 while True:
   part = pop_conn.recv(4096)
@@ -78,33 +72,30 @@ email_text = email_data.decode()
 email_parts = email_text.split()
 
 b = ""
+# flag = 0
+# for part in email_parts:
+#   if part[:13] == "attached-file":
+#     b = ""
+#     flag = 1
+#   else:
+#     if (part[:12] == "Content-Type" or part == ".") and flag == 1:
+#       flag = 0
+#       continue
+#     else:
+#       b += part
 for part in email_parts:
-  if part[:13] == "attached-file":
-    b = ""
-  else:
-    if part[:12] == "Content-Type" or part == ".":
-      continue
-    else:
-      b += part
+  if part[:4] == "name" or part[:8] == "filename": 
+    continue
+  if check(part) == 1: 
+    b += part
+  if part[:12] == "Content-Type" or part == ".":
+    if b != "":
+      image = get_attach(b)
+      if image:
+        image.show()
+      b = ""
 
-print(b)
-
-if b.startswith('data:image'):
-  b = b.split(',')[1]
-
-    # Decode the base64 string
-image_data = base64.b64decode(b)
-
-# Create a BytesIO object to read the image data
-image_buffer = BytesIO(image_data)
-
-# Open the image using Pillow
-image = Image.open(image_buffer)
-
-# Save the image with the new filename
-# image.save(filename)
-
-image.show()
+  
 
 
 
