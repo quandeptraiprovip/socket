@@ -3,6 +3,7 @@ from tkinter import filedialog
 import socket 
 import base64
 import os
+from datetime import datetime
 
 def attach_file():
   file_paths = filedialog.askopenfilenames()
@@ -18,9 +19,9 @@ def send_email():
   email_content = email_content_text.get("1.0", "end-1c")
   files = attached_files_list
 
-  print("To:", to_email)
-  print("From:", from_email)
-  print("Subject:", subject)
+  print("To: ", to_email)
+  print("From: ", from_email)
+  print("Subject: ", subject)
   print("Email Content:", email_content)
   print("Attached Files:", files)
 
@@ -44,8 +45,17 @@ def send_email():
   recv1 = s.recv(1024).decode() 
   print(recv1)
 
+  current_datetime = datetime.now()
+  formatted_datetime = current_datetime.strftime("Date: %Y/%m/%d_%H:%M:%S")
 
-  message = f'Subject: {subject}\r\n\r\n{email_content}\r\n'
+
+
+  message = f"Date: {formatted_datetime}\r"\
+            f"\r\nFrom: {from_email}"\
+            f"\r\nTo: {to_email}\r\n"\
+            f"\r\nSubject: {subject}\r\n"\
+            f"\r\n{email_content}\r\n"\
+            
   s.send(message.encode())
 
   for file in files:

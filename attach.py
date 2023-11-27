@@ -3,7 +3,7 @@ import socket
 import base64
 import os
 
-files = ["/Users/minh10hd/Downloads/unnamed.jpg", "/Users/minh10hd/Downloads/22127349-P.jpg"]
+files = ["text.txt"]
 
 s = socket.socket()
 s.connect(("localhost", 2225)) 

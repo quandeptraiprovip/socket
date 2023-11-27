@@ -4,6 +4,16 @@ from PIL import Image
 from io import BytesIO
 from datetime import datetime
 
+def receive_data(sock):
+  email_data = b''
+  while True:
+    part = pop_conn.recv(4096)
+    email_data += part
+    if len(part) < 4096:
+      break
+
+  return email_data
+
 def check(base64_string):
   try:
     image_data = base64.b64decode(base64_string)
@@ -12,7 +22,7 @@ def check(base64_string):
   except:
     return 0
 
-def get_attach(b):
+def get_img(b):
   if b.startswith('data:image'):
     b = b.split(',')[1]
 
@@ -27,8 +37,22 @@ def get_attach(b):
   except Exception as e:
     print("none")
     return None
+  
+def get_file(b):
+  if b[:4] == "/9j/":
+    image = get_img(b)
+    if image:
+      image.show()
+    return
 
-email_address = "abc@gmail.com"
+  if b[:3] == "JVB":
+    with open('output.pdf', 'wb') as file:
+      file.write(base64.b64decode(b))
+  
+  with open('output.txt', 'wb') as file:
+    file.write(base64.b64decode(b))
+
+email_address = "ttmq38@gmail.com"
 password = "your_password"
 
 pop_conn = socket.socket()
@@ -59,30 +83,12 @@ response = pop_conn.recv(1024).decode()
 # for i in range(1, len(message_list.split()), 2):
 
   # pop_conn.send(f'RETR {message_list.split()[i]}\r\n'.encode())
-pop_conn.send(f'RETR 9\r\n'.encode())
-email_data = b''
-while True:
-  part = pop_conn.recv(4096)
-  email_data += part
-  if len(part) < 4096:
-    break
-
+pop_conn.send(f'RETR 32\r\n'.encode())
+email_data = receive_data(pop_conn)
 email_text = email_data.decode()
-
 email_parts = email_text.split()
 
 b = ""
-# flag = 0
-# for part in email_parts:
-#   if part[:13] == "attached-file":
-#     b = ""
-#     flag = 1
-#   else:
-#     if (part[:12] == "Content-Type" or part == ".") and flag == 1:
-#       flag = 0
-#       continue
-#     else:
-#       b += part
 for part in email_parts:
   if part[:4] == "name" or part[:8] == "filename": 
     continue
@@ -90,14 +96,8 @@ for part in email_parts:
     b += part
   if part[:12] == "Content-Type" or part == ".":
     if b != "":
-      image = get_attach(b)
-      if image:
-        image.show()
+      get_file(b)
       b = ""
-
-  
-
-
 
 pop_conn.send(b'QUIT\r\n')
 print(pop_conn.recv(1024).decode())

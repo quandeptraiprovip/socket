@@ -1,67 +1,75 @@
 import tkinter as tk
-from tkinter import filedialog
 
-def attach_file():
-    file_paths = filedialog.askopenfilenames()
-    # You can handle the file_paths as needed, for now, let's just print them
-    print("Files attached:", file_paths)
-    attached_files.set(file_paths)
+class EmailViewerApp:
+    def __init__(self, master):
+        self.master = master
+        master.title("Email Viewer")
 
-def send_email():
-    to_email = to_email_entry.get()
-    from_email = from_email_entry.get()
-    email_content = email_content_text.get("1.0", "end-1c")
-    files = attached_files.get()
+        # Email List
+        self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
+        self.email_listbox.pack(side=tk.LEFT, fill=tk.Y)
+        self.email_listbox.bind('<<ListboxSelect>>', self.show_messages)
 
-    # You can add the logic to send the email with the specified details
-    print("To:", to_email)
-    print("From:", from_email)
-    print("Email Content:", email_content)
-    print("Attached Files:", files)
-    # Add logic to send email here
+        # Message List
+        self.message_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
+        self.message_listbox.pack(side=tk.LEFT, fill=tk.Y)
+        self.message_listbox.bind('<<ListboxSelect>>', self.show_email_content)
 
-# Create the main window
-window = tk.Tk()
-window.title("Email Client")
+        # Email Content
+        self.email_content_text = tk.Text(master, wrap=tk.WORD, height=10, width=40)
+        self.email_content_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-# Configure columns and rows to expand with the window
-for i in range(5):
-    window.columnconfigure(i, weight=1)
-    window.rowconfigure(i, weight=1)
+        # Initialize data with a new attribute for read/unread status
+        self.email_addresses = ["john@example.com", "jane@example.com"]
+        self.messages = {
+            "john@example.com": ["Meeting Tomorrow", "Project Update"],
+            "jane@example.com": ["Review Proposal", "Follow-up"]
+        }
+        self.email_content = {
+            "Meeting Tomorrow": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "Project Update": "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "Review Proposal": "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+            "Follow-up": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+        }
 
-# To Email
-to_label = tk.Label(window, text="To:")
-to_label.grid(row=0, column=0, sticky="e")
+        # Keep track of read/unread status
+        self.unread_messages = {email: set(messages) for email, messages in self.messages.items()}
 
-to_email_entry = tk.Entry(window)
-to_email_entry.grid(row=0, column=1, columnspan=4, sticky="ew")
+        # Populate email list
+        for email in self.email_addresses:
+            self.email_listbox.insert(tk.END, email)
 
-# From Email
-from_label = tk.Label(window, text="From:")
-from_label.grid(row=1, column=0, sticky="e")
+    def show_messages(self, event):
+        selected_email_index = self.email_listbox.curselection()
+        if selected_email_index:
+            selected_email = self.email_listbox.get(selected_email_index)
+            messages = self.messages.get(selected_email, [])
+            self.message_listbox.delete(0, tk.END)  # Clear previous messages
+            for message in messages:
+                unread = message in self.unread_messages.get(selected_email, set())
+                prefix = " * " if unread else "   "
+                self.message_listbox.insert(tk.END, f"{prefix}{message}")
 
-from_email_entry = tk.Entry(window)
-from_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
+    def show_email_content(self, event):
+        selected_email_index = self.email_listbox.curselection()
+        selected_message_index = self.message_listbox.curselection()
+        if selected_email_index and selected_message_index:
+            selected_email = self.email_listbox.get(selected_email_index)
+            selected_message = self.message_listbox.get(selected_message_index)
+            email_content = self.email_content.get(selected_message, "")
+            self.email_content_text.delete(1.0, tk.END)  # Clear previous content
+            self.email_content_text.insert(tk.END, email_content)
 
-# Email Content
-content_label = tk.Label(window, text="Email Content:")
-content_label.grid(row=2, column=0, sticky="ne")
+            # Mark the message as read
+            self.unread_messages[selected_email].discard(selected_message)
 
-email_content_text = tk.Text(window, wrap="word", width=40, height=10)
-email_content_text.grid(row=2, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+            # Update the messages listbox to reflect the change in read/unread status
+            self.show_messages(None)
 
-# Attach File Button
-attach_button = tk.Button(window, text="Attach File", command=attach_file)
-attach_button.grid(row=3, column=1, columnspan=2, sticky="ew")
+def main():
+    root = tk.Tk()
+    app = EmailViewerApp(root)
+    root.mainloop()
 
-# Attached Files Label
-attached_files = tk.StringVar()
-attached_files_label = tk.Label(window, textvariable=attached_files, wraplength=400)
-attached_files_label.grid(row=3, column=3, columnspan=2, sticky="ew")
-
-# Send Button
-send_button = tk.Button(window, text="Send", command=send_email)
-send_button.grid(row=4, column=1, columnspan=3, sticky="ew")
-
-# Run the Tkinter event loop
-window.mainloop()
+if __name__ == "__main__":
+    main()
