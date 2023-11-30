@@ -51,8 +51,8 @@ def send_email():
 
 
   message = f"Date: {formatted_datetime}\r"\
-            f"\r\nFrom: {from_email}"\
-            f"\r\nTo: {to_email}\r\n"\
+            f"\r\nFrom:{from_email}"\
+            f"\r\nTo:{to_email}\r\n"\
             f"\r\nSubject: {subject}\r\n"\
             f"\r\n{email_content}\r\n"\
             

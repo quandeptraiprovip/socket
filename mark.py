@@ -32,8 +32,12 @@ class EmailViewerApp:
             "Follow-up": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
         }
 
-        # Keep track of read/unread status
-        self.unread_messages = {email: set(messages) for email, messages in self.messages.items()}
+        self.email_status = {
+            "Meeting Tomorrow": "Unread",
+            "Project Update": "Unread",
+            "Review Proposal": "Unread",
+            "Follow-up": "Unread"
+        }
 
         # Populate email list
         for email in self.email_addresses:
@@ -43,28 +47,34 @@ class EmailViewerApp:
         selected_email_index = self.email_listbox.curselection()
         if selected_email_index:
             selected_email = self.email_listbox.get(selected_email_index)
-            messages = self.messages.get(selected_email, [])
+            messages = self.messages.get(selected_email.split()[0], [])
             self.message_listbox.delete(0, tk.END)  # Clear previous messages
             for message in messages:
-                unread = message in self.unread_messages.get(selected_email, set())
-                prefix = " * " if unread else "   "
-                self.message_listbox.insert(tk.END, f"{prefix}{message}")
+                print(self.email_status[message])
+                status = "●" if self.email_status[message] == "Unread" else ""
+                self.message_listbox.insert(tk.END, f"{message}{status}")
+
+            # Mark the selected email as read and update its appearance
+            # for message in messages:
+            #     self.email_status[message] = "Read"
+            # self.update_email_list()
+
+    def update_email_list(self, message_index, message):
+        self.message_listbox.delete(message_index, message_index)
+        self.message_listbox.insert(message_index, message.split('●')[0])
 
     def show_email_content(self, event):
-        selected_email_index = self.email_listbox.curselection()
         selected_message_index = self.message_listbox.curselection()
-        if selected_email_index and selected_message_index:
-            selected_email = self.email_listbox.get(selected_email_index)
+        if selected_message_index:
             selected_message = self.message_listbox.get(selected_message_index)
-            email_content = self.email_content.get(selected_message, "")
+            email_content = self.email_content.get(selected_message.split('●')[0], "")
+            self.email_status[selected_message.split('●')[0]] = "Read"
             self.email_content_text.delete(1.0, tk.END)  # Clear previous content
             self.email_content_text.insert(tk.END, email_content)
 
-            # Mark the message as read
-            self.unread_messages[selected_email].discard(selected_message)
+            self.update_email_list(selected_message_index, selected_message)
 
-            # Update the messages listbox to reflect the change in read/unread status
-            self.show_messages(None)
+
 
 def main():
     root = tk.Tk()

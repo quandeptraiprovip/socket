@@ -1,40 +1,22 @@
-import socket
-import base64
+str = """
+Date: Date: 2023/11/26_08:47:28
 
-files = ["IMG_9946.JPG"]
+From:ttmq38@gmail.com
+To:a@gmail.com
 
-s = socket.socket()
-s.connect(("localhost", 2225)) 
-s.send(b'EHLO example.com\r\n')
+Subject: 123
 
-sender_email = "ttmq38@gmail.com"
-s.send(f'MAIL FROM: <{sender_email}>\r\n'.encode())
+123
 
-receiver_email = "ttmq38@gmail.com"
-s.send(f'RCPT TO: <{receiver_email}>\r\n'.encode())
+Content-Type: application/octet-stream; name=IMG_9946.JPG
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=IMG_9946.JPG
 
-s.send(b'DATA\r\n')
+Content-Type: application/octet-stream; name=IMG_9946.JPG
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=IMG_9946.JPG
 
-for file in files:
-  with open(file, 'rb') as f:
-    # image_data = f.read(1023)
-    # encoded_chunk = base64.b64encode(image_data).decode()
-    # print(encoded_chunk)
+"""
 
-    # while image_data:
-    #   s.send(f'{encoded_chunk}\r\n'.encode())
-    #   image_data = f.read(1023)
-    #   encoded_chunk = base64.b64encode(image_data).decode()
-    while True:
-      chunk = f.read(1024)
-      if not chunk:
-          break
-      encoded_chunk = base64.b64encode(chunk).decode()
-      # encoded_chunk = base64.b64encode(chunk)
-      s.send(f'{encoded_chunk}\r\n'.encode())
+print(str.partition("Content-Type:"))
 
-
-
-s.send(".\r\n".encode())
-s.send("QUIT\r\n".encode())
-s.close()

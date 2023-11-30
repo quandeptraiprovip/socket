@@ -26,12 +26,7 @@ class EmailViewerApp:
     # Initialize data (replace this with actual data retrieval logic)
     self.email_addresses = []
     self.messages = {}
-    self.email_content = {
-        "Meeting Tomorrow": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "Project Update": "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        "Review Proposal": "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        "Follow-up": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
-    }
+    self.email_content = {}
     self.sock()
 
 
