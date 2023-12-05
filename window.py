@@ -100,6 +100,7 @@ from_label.grid(row=1, column=0, sticky="e")
 
 from_email_entry = tk.Entry(window)
 from_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
+from_email_entry.insert(0, "a@gmail.com")
 
 subject_label = tk.Label(window, text="Subject:")
 subject_label.grid(row=2, column=0, sticky="e")

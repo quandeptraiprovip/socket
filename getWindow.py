@@ -7,9 +7,11 @@ from io import BytesIO
 import fitz
 
 class EmailViewerApp:
-  def __init__(self, master):
+  def __init__(self, master, email):
     self.master = master
     master.title("Email Viewer")
+
+    self.email = email
 
     # Email List
     self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
@@ -164,7 +166,7 @@ class EmailViewerApp:
     return email_data
 
   def sock(self):
-    email_address = "a@gmail.com"
+    email_address = self.email
     password = "your_password"
 
     pop_conn = socket.socket()
