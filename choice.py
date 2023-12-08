@@ -12,11 +12,12 @@ class Choices:
   def __init__(self, master, email):
     self.master = master
     master.title("Email App")
+    master.geometry("400x300")
 
     self.email = email
 
-    self.back_button = tk.Button(master, text="⬅", font=("Arial", 14, "bold"))
-    self.back_button.pack(side=tk.TOP, anchor=tk.NW, padx=10, pady=10)
+    # self.back_button = tk.Button(master, text="⬅", font=("Arial", 14, "bold"))
+    # self.back_button.pack(side=tk.TOP, anchor=tk.NW, padx=10, pady=10)
 
     self.send_button = tk.Button(master, text="Send Email", command = self.send)
     self.send_button.pack(pady=10)

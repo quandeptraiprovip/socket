@@ -14,9 +14,9 @@ config["POP3"] = {
   "port": 3335
 }
 
-# config["AutoUpdate"] = {
-#   "time": 10
-# }
+config["AutoUpdate"] = {
+  "time": 5000
+}
 
-with open("config.ini", "w") as f:
+with open("config.py", "w") as f:
   config.write(f)

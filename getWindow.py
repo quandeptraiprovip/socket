@@ -5,6 +5,7 @@ import base64
 from PIL import Image, ImageTk
 from io import BytesIO
 import fitz
+from configparser import ConfigParser
 
 class EmailViewerApp:
   def __init__(self, master, email):
@@ -33,9 +34,15 @@ class EmailViewerApp:
     self.messages = {}
     self.email_content = {}
     self.email_status = {}
+    self.email_client = {}
+    self.email_client[self.email] = {}
     self.sock()
 
-    self.auto_check_interval = 5000
+    config = ConfigParser()
+    config.read("config.ini")
+    config_data = config["AutoUpdate"]
+
+    self.auto_check_interval = config_data["time"]
 
     self.master.after(0, self.auto_check_and_update)
 
@@ -80,7 +87,7 @@ class EmailViewerApp:
     if b.startswith('data:image'):
       b = b.split(',')[1]
 
-    print("1")
+    # print("1")
     # print(b)
 
     try:
@@ -151,6 +158,8 @@ class EmailViewerApp:
             b = ""
 
       self.email_status[selected_message.split('●')[0]] = "Read"
+      self.email_client[self.email][selected_message.split('●')[0]] = "Read"
+      self.write_file()
       self.update_email_list(selected_message_index, selected_message)
 
     
@@ -164,13 +173,55 @@ class EmailViewerApp:
         break
 
     return email_data
+  
+  def write_file(self):
+    file = open("email.txt", "w")
+    all_address = list(self.email_client.keys())
+    for address in all_address:
+
+      file.write(address)
+      file.write("\n")
+      all_mess = list(self.email_client[address].keys())
+      for mess in all_mess:
+        file.write(mess + " " + self.email_client[address][mess] + "\n")
+
+    file.close()
+
+  def read_file(self):
+    file = open("email.txt", "r")
+    parts = file.read()
+
+    all_parts = parts.split()
+
+    email = ""
+    message = ""
+    for i in range(0, len(all_parts)):
+      if "@" in all_parts[i]:
+        email = all_parts[i]
+        self.email_client[all_parts[i]] = {}
+      else:
+        if all_parts[i] == "Unread" or all_parts[i] == "Read":
+          self.email_client[email][message] = all_parts[i]
+        else:
+          message = all_parts[i]
+          self.email_client[email][message] = ""
+
+
+    print(self.email_client)
+    file.close()
 
   def sock(self):
+
+    self.read_file()
+    all_mess = list(self.email_client[self.email].keys())
+    config = ConfigParser()
+    config.read("config.ini")
+    config_data = config["POP3"]
     email_address = self.email
     password = "your_password"
 
     pop_conn = socket.socket()
-    pop_conn.connect(("localhost", 3335))
+    pop_conn.connect(("localhost", int(config_data["port"])))
 
     recv = pop_conn.recv(1024).decode()
     print(recv)
@@ -219,7 +270,11 @@ class EmailViewerApp:
           
           if response.split()[k + 1] not in self.messages[part.split(":")[1].strip()]:
             self.messages[part.split(":")[1].strip()].append(response.split()[k + 1])
-            self.email_status[response.split()[k + 1]] = "Unread"
+            if response.split()[k + 1] in all_mess:
+              self.email_status[response.split()[k + 1]] = self.email_client[self.email][response.split()[k + 1]]
+            else: 
+              self.email_status[response.split()[k + 1]] = "Unread"
+              self.email_client[self.email][response.split()[k + 1]] = "Unread"
 
           continue
           

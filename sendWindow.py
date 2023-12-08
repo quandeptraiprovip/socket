@@ -4,6 +4,7 @@ import socket
 import base64
 import os
 from datetime import datetime
+from configparser import ConfigParser
 
 class SendWindow:
   def __init__(self, master, email):
@@ -64,6 +65,10 @@ class SendWindow:
     email_content = self.email_content_text.get("1.0", "end-1c")
     files = self.attached_files_list
 
+    config = ConfigParser()
+    config.read("config.ini")
+    config_data = config("SMTP")
+
     print("To: ", to_email)
     print("From: ", from_email)
     print("Subject: ", subject)
@@ -71,7 +76,7 @@ class SendWindow:
     print("Attached Files:", files)
 
     s = socket.socket()
-    s.connect(("localhost", 2225))
+    s.connect(("localhost", config_data("port")))
 
     recv1 = s.recv(1024).decode() 
     print(recv1)
