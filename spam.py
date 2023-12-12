@@ -7,13 +7,8 @@ from io import BytesIO
 import fitz
 from configparser import ConfigParser
 
-class EmailViewerApp:
-  def __init__(self, master, email):
-    self.master = master
-    master.title("Email Viewer")
-
-    self.email = email
-
+class Project:
+  def __init__(self, master):
     # Email List
     self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
     self.email_listbox.pack(side=tk.LEFT, fill=tk.Y)
@@ -28,23 +23,20 @@ class EmailViewerApp:
     self.email_content_text = tk.Text(master, wrap=tk.WORD, height=10, width=40)
     self.email_content_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    # Initialize data (replace this with actual data retrieval logic)
+
     self.tk_image = None
     self.email_addresses = []
     self.messages = {}
     self.email_content = {}
     self.email_status = {}
     self.email_client = {}
-    self.email_client[self.email] = {}
+    self.content = {}
+    # self.email_client[self.email] = {}
+
     self.sock()
 
-    config = ConfigParser()
-    config.read("config.ini")
-    config_data = config["AutoUpdate"]
 
-    self.auto_check_interval = config_data["time"]
-
-    self.master.after(0, self.auto_check_and_update)
+    # for email in self.email_at(tk.END, email)
 
   def auto_check_and_update(self):
     # Perform the email check here
@@ -87,7 +79,7 @@ class EmailViewerApp:
     if b.startswith('data:image'):
       b = b.split(',')[1]
 
-    # print("1")
+    print("1")
     # print(b)
 
     try:
@@ -158,8 +150,6 @@ class EmailViewerApp:
             b = ""
 
       self.email_status[selected_message.split('●')[0]] = "Read"
-      self.email_client[self.email][selected_message.split('●')[0]] = "Read"
-      self.write_file()
       self.update_email_list(selected_message_index, selected_message)
 
     
@@ -172,56 +162,17 @@ class EmailViewerApp:
       if len(part) < 4096:
         break
 
-    return email_data
-  
-  def write_file(self):
-    file = open("email.txt", "w")
-    all_address = list(self.email_client.keys())
-    for address in all_address:
-
-      file.write(address)
-      file.write("\n")
-      all_mess = list(self.email_client[address].keys())
-      for mess in all_mess:
-        file.write(mess + " " + self.email_client[address][mess] + "\n")
-
-    file.close()
-
-  def read_file(self):
-    file = open("email.txt", "r")
-    parts = file.read()
-
-    all_parts = parts.split()
-
-    email = ""
-    message = ""
-    for i in range(0, len(all_parts)):
-      if "@" in all_parts[i]:
-        email = all_parts[i]
-        self.email_client[all_parts[i]] = {}
-      else:
-        if all_parts[i] == "Unread" or all_parts[i] == "Read":
-          self.email_client[email][message] = all_parts[i]
-        else:
-          message = all_parts[i]
-          self.email_client[email][message] = ""
-
-
-    print(self.email_client)
-    file.close()
+    return str(email_data)
 
   def sock(self):
+    self.email_listbox.delete(0, tk.END)
+    self.email_addresses = []
 
-    self.read_file()
-    all_mess = list(self.email_client[self.email].keys())
-    config = ConfigParser()
-    config.read("config.ini")
-    config_data = config["POP3"]
-    email_address = self.email
+    email_address = "a@gmail.com"
     password = "your_password"
 
     pop_conn = socket.socket()
-    pop_conn.connect(("localhost", int(config_data["port"])))
+    pop_conn.connect(("localhost", 3335))
 
     recv = pop_conn.recv(1024).decode()
     print(recv)
@@ -249,78 +200,88 @@ class EmailViewerApp:
 
       pop_conn.send(f'RETR {message_list.split()[k]}\r\n'.encode())
       email_data = self.receive_data(pop_conn)
-      email_text = email_data.decode()
-      email_parts = email_text.split()
+      email_parts = email_data.split('\\r\\n')
       
-      self.email_content[response.split()[k + 1]] = email_text
-      # print(email_text)
 
       b = ""
       content = ""
       flag = 0
+      email = ""
       for i, part in enumerate(email_parts):
         if part[:4] == "From":
           content += part
-          content += email_parts[i+1]
-          i + 1
           content+= '\n'
-          if part.split(":")[1].strip() not in self.email_addresses:
-            self.email_addresses.append(part.split(":")[1].strip()) 
-            self.messages[part.split(":")[1].strip()] = []
+          email = part.split(":")[1].strip()
+
+          # if part.split(":")[1].strip() not in self.email_addresses:
+          #   self.email_addresses.append(part.split(":")[1].strip()) 
+          #   self.messages[part.split(":")[1].strip()] = []
           
-          if response.split()[k + 1] not in self.messages[part.split(":")[1].strip()]:
-            self.messages[part.split(":")[1].strip()].append(response.split()[k + 1])
-            if response.split()[k + 1] in all_mess:
-              self.email_status[response.split()[k + 1]] = self.email_client[self.email][response.split()[k + 1]]
-            else: 
-              self.email_status[response.split()[k + 1]] = "Unread"
-              self.email_client[self.email][response.split()[k + 1]] = "Unread"
+          # if response.split()[k + 1] not in self.messages[part.split(":")[1].strip()]:
+          #   self.messages[part.split(":")[1].strip()].append(response.split()[k + 1])
+          #   self.email_status[response.split()[k + 1]] = "Unread"
 
           continue
           
         if part[:3] == "To:":
           content += part
-          content += email_parts[i+1]
-          i + 1
-          content += '\n'
-          continue
-
-        if part == "":
-          continue
-
-        if part[:4] == "name" or part[:8] == "filename":
-          continue
-
-        if part[:3] == "+OK":
-          email_parts[i+1] =""
-          continue
-
-        if part[:4] == "Date":
-          email_parts[i + 1] = ""
-          content += part
-          content += email_parts[i + 2]
-          content += '\n'
-          email_parts[i+2] = ""
-          continue
-
-        if part[:7] == "Subject":
-          content += part + " " + email_parts[i+1]
-          print(email_parts[i+1])
-          i = i + 1
           content += '\n\n'
           continue
 
+        if part[:4] == "name" or part[:8] == "filename":
+          flag = 1
+          self.email_content[response.split()[k + 1]] = content
+          print(content)
+          if "virus" in content or "hack" in content or "crack" in content:
+            if email not in self.email_addresses:
+              self.email_addresses.append(email) 
+              self.messages[email] = []
 
-    # for email in self.email_addresses:
-    #   self.email_listbox.insert(tk.END, email)    
+            if response.split()[k + 1] not in self.messages[email]:
+              self.messages[email].append(response.split()[k + 1])
+              self.email_status[response.split()[k + 1]] = "Unread"
+          break
+
+        if i == 0:
+          continue
+
+        if part[:4] == "Date":
+          content += part
+          content += '\n\n'
+          continue
+
+        if part[:7] == "Subject":
+          content += part
+          content += '\n\n'
+          continue
+        
+        if flag == 0:
+          content += part
+          content += '\n'
+
+        if part == ".":
+          self.email_content[response.split()[k + 1]] = content
+
+          print(content)
+
+          if "virus" in content.partition("Content-Type:")[0] or "hack" in content.partition("Content-Type:")[0] or "crack" in content.partition("Content-Type:")[0]:
+            if email not in self.email_addresses:
+              self.email_addresses.append(email) 
+              self.messages[email] = []
+
+            if response.split()[k + 1] not in self.messages[email]:
+              self.messages[email].append(response.split()[k + 1])
+              self.email_status[response.split()[k + 1]] = "Unread"
+
+          break
+
+    for email in self.email_addresses:
+      self.email_listbox.insert(tk.END, email)
 
 
-
-
-def main():
-  root = tk.Tk()
-  app = EmailViewerApp(root)
-  root.mainloop()
+    
 
 if __name__ == "__main__":
-  main()
+  root = tk.Tk()
+  app = Project(root)
+  root.mainloop()

@@ -67,7 +67,7 @@ class SendWindow:
 
     config = ConfigParser()
     config.read("config.ini")
-    config_data = config("SMTP")
+    config_data = config["SMTP"]
 
     print("To: ", to_email)
     print("From: ", from_email)
@@ -76,7 +76,7 @@ class SendWindow:
     print("Attached Files:", files)
 
     s = socket.socket()
-    s.connect(("localhost", config_data("port")))
+    s.connect(("localhost", int(config_data["port"])))
 
     recv1 = s.recv(1024).decode() 
     print(recv1)
