@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 import sendWindow
 import getWindow
+import choice2
 
 class Choices:
 
@@ -36,4 +37,4 @@ class Choices:
   
   def read(self):
     self.clear_window()
-    getWindow.EmailViewerApp(self.master, self.email)
+    choice2.Choice(self.master, self.email)

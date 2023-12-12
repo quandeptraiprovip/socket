@@ -6,9 +6,12 @@ from PIL import Image, ImageTk
 from io import BytesIO
 import fitz
 from configparser import ConfigParser
+import choice2
 
 class Project:
-  def __init__(self, master):
+  def __init__(self, master, email):
+    self.master = master
+    master.title("Spam")
     # Email List
     self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
     self.email_listbox.pack(side=tk.LEFT, fill=tk.Y)
@@ -23,6 +26,8 @@ class Project:
     self.email_content_text = tk.Text(master, wrap=tk.WORD, height=10, width=40)
     self.email_content_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+    back_button = tk.Button(master, text="Back", command=self.go_back)
+    back_button.pack(side=tk.TOP, padx=10, pady=10)
 
     self.tk_image = None
     self.email_addresses = []
@@ -37,6 +42,14 @@ class Project:
 
 
     # for email in self.email_at(tk.END, email)
+
+  def clear_window(self):
+    for widget in self.master.winfo_children():
+        widget.destroy()
+
+  def go_back(self):
+    self.clear_window()
+    choice2.Choice(self.master, self.email)
 
   def auto_check_and_update(self):
     # Perform the email check here
@@ -277,11 +290,3 @@ class Project:
 
     for email in self.email_addresses:
       self.email_listbox.insert(tk.END, email)
-
-
-    
-
-if __name__ == "__main__":
-  root = tk.Tk()
-  app = Project(root)
-  root.mainloop()
