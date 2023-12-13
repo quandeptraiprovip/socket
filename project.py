@@ -173,9 +173,45 @@ class Project:
             b = ""
 
       self.email_status[selected_message.split('●')[0]] = "Read"
+      self.email_client[self.email][selected_message.split('●')[0]] = "Read"
+      self.write_file()
       self.update_email_list(selected_message_index, selected_message)
 
-    
+  def write_file(self):
+    file = open("email.txt", "w")
+    all_address = list(self.email_client.keys())
+    for address in all_address:
+
+      file.write(address)
+      file.write("\n")
+      all_mess = list(self.email_client[address].keys())
+      for mess in all_mess:
+        file.write(mess + " " + self.email_client[address][mess] + "\n")
+
+    file.close()
+
+  def read_file(self):
+    file = open("email.txt", "r")
+    parts = file.read()
+
+    all_parts = parts.split()
+
+    email = ""
+    message = ""
+    for i in range(0, len(all_parts)):
+      if "@" in all_parts[i]:
+        email = all_parts[i]
+        self.email_client[all_parts[i]] = {}
+      else:
+        if all_parts[i] == "Unread" or all_parts[i] == "Read":
+          self.email_client[email][message] = all_parts[i]
+        else:
+          message = all_parts[i]
+          self.email_client[email][message] = ""
+
+
+    print(self.email_client)
+    file.close()
 
   def receive_data(self, sock):
     email_data = b''
@@ -188,8 +224,13 @@ class Project:
     return str(email_data)
 
   def sock(self):
+    self.read_file()
+    all_mess = list(self.email_client[self.email].keys())
     self.email_listbox.delete(0, tk.END)
     self.email_addresses = []
+    config = ConfigParser()
+    config.read("config.ini")
+    config_data = config["POP3"]
 
     subject = self.search_entry.get()
     if not subject:
@@ -200,7 +241,7 @@ class Project:
     password = "your_password"
 
     pop_conn = socket.socket()
-    pop_conn.connect(("localhost", 3335))
+    pop_conn.connect(("localhost", int(config_data["port"])))
 
     recv = pop_conn.recv(1024).decode()
     print(recv)
@@ -279,7 +320,11 @@ class Project:
 
             if response.split()[k + 1] not in self.messages[email]:
               self.messages[email].append(response.split()[k + 1])
-              self.email_status[response.split()[k + 1]] = "Unread"
+              if response.split()[k + 1] in all_mess:
+                self.email_status[response.split()[k + 1]] = self.email_client[self.email][response.split()[k + 1]]
+              else: 
+                self.email_status[response.split()[k + 1]] = "Unread"
+                self.email_client[self.email][response.split()[k + 1]] = "Unread"
 
           content += '\n\n'
           continue

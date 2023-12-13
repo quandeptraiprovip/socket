@@ -6,6 +6,10 @@ config["ttmq38@gmail.com"] = {
   "password": "123456"
 }
 
+config["a@gmail.com"] = {
+  "password": "123456"
+}
+
 config["SMTP"] = {
   "port": 2225
 }
@@ -18,5 +22,5 @@ config["AutoUpdate"] = {
   "time": 5000
 }
 
-with open("config.py", "w") as f:
+with open("config.ini", "w") as f:
   config.write(f)

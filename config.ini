@@ -1,6 +1,9 @@
 [ttmq38@gmail.com]
 password = 123456
 
+[a@gmail.com]
+password = 123456
+
 [SMTP]
 port = 2225
 
