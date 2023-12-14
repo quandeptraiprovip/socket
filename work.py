@@ -11,6 +11,7 @@ class Project:
   def __init__(self, master, email):
     self.master = master
     master.title("Work")
+    master.geometry("1000x300")
     self.email = email
     # Email List
     self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
@@ -129,7 +130,7 @@ class Project:
       parts = email_content.partition("Content-Type:")
 
       self.email_content_text.delete(1.0, tk.END)  # Clear previous content
-      self.email_content_text.insert(tk.END, parts[0])
+      self.email_content_text.insert(tk.END, parts[0][8:])
 
       b = ""
       img_text = parts[2].split()
