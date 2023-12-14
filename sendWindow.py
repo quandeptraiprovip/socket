@@ -4,14 +4,16 @@ import socket
 import base64
 import os
 from datetime import datetime
-from configparser import ConfigParser
+import choice
 
 class SendWindow:
   def __init__(self, master, email):
     self.master = master
     master.title("Email Client")
 
-    for i in range(6):  # Increased the range to accommodate the new row
+    self.email = email
+
+    for i in range(7):  # Increased the range to accommodate the new row
       master.columnconfigure(i, weight=1)
       master.rowconfigure(i, weight=1)
 
@@ -20,6 +22,18 @@ class SendWindow:
 
     self.to_email_entry = tk.Entry(master)
     self.to_email_entry.grid(row=0, column=1, columnspan=4, sticky="ew")
+
+    self.cc_label = tk.Label(master, text="Cc:")
+    self.cc_label.grid(row=1, column=0, sticky="e")
+
+    self.cc_email_entry = tk.Entry(master)
+    self.cc_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
+
+    self.bcc_label = tk.Label(master, text="Bcc:")
+    self.bcc_label.grid(row=2, column=0, sticky="e")
+
+    self.bcc_email_entry = tk.Entry(master)
+    self.bcc_email_entry.grid(row=2, column=1, columnspan=4, sticky="ew")
 
     self.from_label = tk.Label(master, text="From:")
     self.from_label.grid(row=1, column=0, sticky="e")
@@ -48,8 +62,25 @@ class SendWindow:
     self.attached_files_label = tk.Label(master, textvariable=self.attached_files, wraplength=400)
     self.attached_files_label.grid(row=4, column=3, columnspan=2, sticky="ew")
 
+    self.recipient_type_var = tk.StringVar(value="To")
+    self.recipient_type_menu = tk.OptionMenu(master, self.recipient_type_var, "To", "Cc", "Bcc")
+    self.recipient_type_menu.grid(row=7, column=4, sticky="e")
+
     self.send_button = tk.Button(master, text="Send", command=self.send_email)
     self.send_button.grid(row=5, column=1, columnspan=3, sticky="ew")
+
+    self.back_button = tk.Button(master, text="Back", command=self.go_back)
+    self.back_button.grid(row=0, column=6, sticky="e")
+
+
+  def clear_window(self):
+    # Destroy all widgets in the window
+    for widget in self.master.winfo_children():
+        widget.destroy()
+
+  def go_back(self):
+     self.clear_window()
+     choice.Choices(self.master, self.email)
 
   def attach_file(self):
     file_paths = filedialog.askopenfilenames()
@@ -59,24 +90,24 @@ class SendWindow:
     self.attached_files.set(", ".join(self.attached_files_list))
 
   def send_email(self):
-    to_email = self.to_email_entry.get()
+    to_addresses = self.to_email_entry.get().split(',')
+    cc_addresses = self.cc_email_entry.get().split(',')
+    bcc_addresses = self.bcc_email_entry.get().split(',')
     from_email = self.from_email_entry.get()
     subject = self.subject_entry.get()
     email_content = self.email_content_text.get("1.0", "end-1c")
     files = self.attached_files_list
 
-    config = ConfigParser()
-    config.read("config.ini")
-    config_data = config["SMTP"]
-
-    print("To: ", to_email)
+    print("To: ", to_addresses)
+    print("Cc: ", cc_addresses)
+    print("Bcc: ", bcc_addresses)
     print("From: ", from_email)
     print("Subject: ", subject)
     print("Email Content:", email_content)
     print("Attached Files:", files)
 
     s = socket.socket()
-    s.connect(("localhost", int(config_data["port"])))
+    s.connect(("localhost", 2225))
 
     recv1 = s.recv(1024).decode() 
     print(recv1)
@@ -87,22 +118,38 @@ class SendWindow:
     print(recv1)
 
 
-    s.send(f'RCPT TO: <{to_email}>\r\n'.encode())
-    recv1 = s.recv(1024).decode() 
-    print(recv1)
+    for to_email in to_addresses:
+            s.send(f'RCPT TO: <{to_email}>\r\n'.encode())
+            recv1 = s.recv(1024).decode() 
+            print(recv1)
+
+    for cc_email in cc_addresses:
+        s.send(f'RCPT TO: <{cc_email}>\r\n'.encode())
+        recv1 = s.recv(1024).decode()
+        print(recv1)
+
+    if self.recipient_type_var.get() == "Bcc":
+        s.send(b'RCPT TO: <undisclosed-recipients: ;>\r\n')
+        recv1 = s.recv(1024).decode()
+        print(recv1)
+    else:
+        for bcc_email in bcc_addresses:
+            s.send(f'RCPT TO: <{bcc_email}>\r\n'.encode())
+            recv1 = s.recv(1024).decode()
+            print(recv1)
 
     s.send(b'DATA\r\n')
     recv1 = s.recv(1024).decode() 
     print(recv1)
 
     current_datetime = datetime.now()
-    formatted_datetime = current_datetime.strftime("Date: %Y/%m/%d_%H:%M:%S")
+    formatted_datetime = current_datetime.strftime("%Y/%m/%d_%H:%M:%S")
 
 
 
     message = f"Date: {formatted_datetime}\r"\
               f"\r\nFrom:{from_email}"\
-              f"\r\nTo:{to_email}\r\n"\
+              f"\r\nTo:{', '.join(to_addresses)}\r\n"\
               f"\r\nSubject: {subject}\r\n"\
               f"\r\n{email_content}\r\n"\
               

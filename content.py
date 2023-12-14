@@ -4,7 +4,6 @@ import socket
 import base64
 from PIL import Image, ImageTk
 from io import BytesIO
-import fitz
 from configparser import ConfigParser
 
 class Project:

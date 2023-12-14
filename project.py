@@ -4,14 +4,15 @@ import socket
 import base64
 from PIL import Image, ImageTk
 from io import BytesIO
-import fitz
 from configparser import ConfigParser
 import choice2
 
-class Project:
+class EmailViewerApp:
   def __init__(self, master, email):
     self.master = master
-    master.title("Project")
+    master.title("Email Viewer")
+    master.geometry("1000x300")
+
     self.email = email
 
     # Email List
@@ -28,30 +29,39 @@ class Project:
     self.email_content_text = tk.Text(master, wrap=tk.WORD, height=10, width=40)
     self.email_content_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    # Search Entry
-    self.search_entry = tk.Entry(master, width=20)
-    self.search_entry.pack(pady=10)
-    
-    # Search Button
-    self.search_button = tk.Button(master, text="Search", command=self.sock)
-    self.search_button.pack()
-
     back_button = tk.Button(master, text="Back", command=self.go_back)
     back_button.pack(side=tk.TOP, padx=10, pady=10)
 
+    # Initialize data (replace this with actual data retrieval logic)
     self.tk_image = None
     self.email_addresses = []
     self.messages = {}
     self.email_content = {}
     self.email_status = {}
     self.email_client = {}
-    self.subjects = {}
-    # self.email_client[self.email] = {}
+    self.email_client[self.email] = {}
+    self.sock("ahihi@testing.com")
 
-    self.sock()
+    # config = ConfigParser()
+    # config.read("config.ini")
+    # config_data = config["AutoUpdate"]
 
+    self.email_listbox.insert(tk.END, "-- ahihi@testing.com --")
+    for email in self.email_addresses:
+      self.email_listbox.insert(tk.END, email)
 
-    # for email in self.email_at(tk.END, email)
+    self.email_addresses = []
+    self.sock("ahuu@testing.com")
+    
+    self.email_listbox.insert(tk.END, "-- ahuu@testing.com --")
+    for email in self.email_addresses:
+      self.email_listbox.insert(tk.END, email)
+
+    
+
+    # self.auto_check_interval = config_data["time"]
+
+    # self.master.after(0, self.auto_check_and_update)
 
   def clear_window(self):
     for widget in self.master.winfo_children():
@@ -102,7 +112,7 @@ class Project:
     if b.startswith('data:image'):
       b = b.split(',')[1]
 
-    print("1")
+    # print("1")
     # print(b)
 
     try:
@@ -138,7 +148,7 @@ class Project:
       parts = email_content.partition("Content-Type:")
 
       self.email_content_text.delete(1.0, tk.END)  # Clear previous content
-      self.email_content_text.insert(tk.END, parts[0])
+      self.email_content_text.insert(tk.END, parts[0][8:])
 
       b = ""
       img_text = parts[2].split()
@@ -177,6 +187,18 @@ class Project:
       self.write_file()
       self.update_email_list(selected_message_index, selected_message)
 
+    
+
+  def receive_data(self, sock):
+    email_data = b''
+    while True:
+      part = sock.recv(4096)
+      email_data += part
+      if len(part) < 4096:
+        break
+
+    return email_data
+  
   def write_file(self):
     file = open("email.txt", "w")
     all_address = list(self.email_client.keys())
@@ -213,31 +235,14 @@ class Project:
     print(self.email_client)
     file.close()
 
-  def receive_data(self, sock):
-    email_data = b''
-    while True:
-      part = sock.recv(4096)
-      email_data += part
-      if len(part) < 4096:
-        break
+  def sock(self, email):
 
-    return str(email_data)
-
-  def sock(self):
     self.read_file()
     all_mess = list(self.email_client[self.email].keys())
-    self.email_listbox.delete(0, tk.END)
-    self.email_addresses = []
     config = ConfigParser()
     config.read("config.ini")
     config_data = config["POP3"]
-
-    subject = self.search_entry.get()
-    if not subject:
-      subject = ""
-    
-    print(subject)
-    email_address = "a@gmail.com"
+    email_address = self.email
     password = "your_password"
 
     pop_conn = socket.socket()
@@ -246,7 +251,7 @@ class Project:
     recv = pop_conn.recv(1024).decode()
     print(recv)
 
-    pop_conn.send(f'USER {email_address}\r\n'.encode())
+    pop_conn.send(f'USER {email}\r\n'.encode())
     print(pop_conn.recv(1024).decode())
 
     pop_conn.send(f'PASS {password}\r\n'.encode())
@@ -269,74 +274,77 @@ class Project:
 
       pop_conn.send(f'RETR {message_list.split()[k]}\r\n'.encode())
       email_data = self.receive_data(pop_conn)
-      email_parts = email_data.split('\\r\\n')
+      email_text = email_data.decode()
+      email_parts = email_text.split()
       
+      self.email_content[response.split()[k + 1]] = email_text
+      
+      # print(email_text)
 
       b = ""
       content = ""
       flag = 0
-      email = ""
       for i, part in enumerate(email_parts):
         if part[:4] == "From":
           content += part
+          content += email_parts[i+1]
+          i + 1
           content+= '\n'
-          email = part.split(":")[1].strip()
-
-          # if part.split(":")[1].strip() not in self.email_addresses:
-          #   self.email_addresses.append(part.split(":")[1].strip()) 
-          #   self.messages[part.split(":")[1].strip()] = []
+          if part.split(":")[1].strip() not in self.email_addresses:
+            self.email_addresses.append(part.split(":")[1].strip()) 
+            self.messages[part.split(":")[1].strip()] = []
           
-          # if response.split()[k + 1] not in self.messages[part.split(":")[1].strip()]:
-          #   self.messages[part.split(":")[1].strip()].append(response.split()[k + 1])
-          #   self.email_status[response.split()[k + 1]] = "Unread"
+          if response.split()[k + 1] not in self.messages[part.split(":")[1].strip()]:
+            self.messages[part.split(":")[1].strip()].append(response.split()[k + 1])
+            if response.split()[k + 1] in all_mess:
+              self.email_status[response.split()[k + 1]] = self.email_client[self.email][response.split()[k + 1]]
+            else: 
+              self.email_status[response.split()[k + 1]] = "Unread"
+              self.email_client[self.email][response.split()[k + 1]] = "Unread"
 
           continue
           
         if part[:3] == "To:":
           content += part
-          content += '\n\n'
+          content += email_parts[i+1]
+          i + 1
+          content += '\n'
+          continue
+
+        if part == "":
           continue
 
         if part[:4] == "name" or part[:8] == "filename":
-          flag = 1
-          self.email_content[response.split()[k + 1]] = content
-          break
+          continue
 
-        if i == 0:
+        if part[:3] == "+OK":
           continue
 
         if part[:4] == "Date":
+          email_parts[i + 1] = ""
           content += part
-          content += '\n\n'
+          content += email_parts[i + 2]
+          content += '\n'
+          email_parts[i+2] = ""
           continue
 
         if part[:7] == "Subject":
-          content += part
-          self.subjects[response.split()[k + 1]] = part[8:]
-          if subject in part[8:]:
-            if email not in self.email_addresses:
-              self.email_addresses.append(email) 
-              self.messages[email] = []
-
-            if response.split()[k + 1] not in self.messages[email]:
-              self.messages[email].append(response.split()[k + 1])
-              if response.split()[k + 1] in all_mess:
-                self.email_status[response.split()[k + 1]] = self.email_client[self.email][response.split()[k + 1]]
-              else: 
-                self.email_status[response.split()[k + 1]] = "Unread"
-                self.email_client[self.email][response.split()[k + 1]] = "Unread"
-
+          content += part + " " + email_parts[i+1]
+          # print(email_parts[i+1])
           content += '\n\n'
           continue
-        
-        if flag == 0:
-          content += part
-          content += '\n'
 
-        if part == ".":
-          self.email_content[response.split()[k + 1]] = content
-          break
 
-    for email in self.email_addresses:
-      self.email_listbox.insert(tk.END, email)
+    # for email in self.email_addresses:
+    #   self.email_listbox.insert(tk.END, email)    
 
+
+
+
+def main():
+  root = tk.Tk()
+  app = EmailViewerApp(root)
+  root.mainloop()
+
+if __name__ == "__main__":
+  main()

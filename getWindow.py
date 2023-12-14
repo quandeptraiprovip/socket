@@ -4,14 +4,15 @@ import socket
 import base64
 from PIL import Image, ImageTk
 from io import BytesIO
-import fitz
 from configparser import ConfigParser
+from datetime import datetime
 import choice2
 
 class EmailViewerApp:
   def __init__(self, master, email):
     self.master = master
     master.title("Email Viewer")
+    master.geometry("1000x300")
 
     self.email = email
 
@@ -82,6 +83,8 @@ class EmailViewerApp:
       return 0
     
   def get_file(self, b):
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y%m%d%H%M%S")
     if b[:4] == "/9j/":
       image = self.get_img(b)
       # if image:
@@ -89,10 +92,11 @@ class EmailViewerApp:
       return image
 
     if b[:3] == "JVB":
-      with open('output.pdf', 'wb') as file:
+      with open(f'{formatted_datetime}.pdf', 'wb') as file:
         file.write(base64.b64decode(b))
+      return
     
-    with open('output.txt', 'wb') as file:
+    with open(f'{formatted_datetime}.txt', 'wb') as file:
       file.write(base64.b64decode(b))
   
   def get_img(self, b):

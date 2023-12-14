@@ -44,7 +44,13 @@ class StartWindow:
     username = self.entry_username.get()
     password = self.entry_password.get()
 
+    if password == "":
+      self.clear_window()
+      choice.Choices(self.master, username)
+      return
+
     if username in config:
+
       if str(password) == str(config[username]["password"]):
 
         # Add your login logic here

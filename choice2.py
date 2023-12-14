@@ -4,6 +4,7 @@ import getWindow
 import project
 import work
 import important
+import choice
 
 class Choice:
   def __init__(self, master, email):
@@ -23,8 +24,11 @@ class Choice:
     spam_button = tk.Button(master, text="Spam", command=self.spam_clicked)
     spam_button.pack(pady=10)
 
-    subject_button = tk.Button(master, text="Subject", command=self.subject_clicked)
+    subject_button = tk.Button(master, text="Project", command=self.subject_clicked)
     subject_button.pack(pady=10)
+
+    back_button = tk.Button(master, text="Back", command=self.go_back)
+    back_button.pack(side=tk.TOP, padx=10, pady=10)
 
   def clear_window(self):
     for widget in self.master.winfo_children():
@@ -40,7 +44,7 @@ class Choice:
 
   def important_clicked(self):
     self.clear_window()
-    important.Project(self.master, self.email)
+    important.email(self.master, self.email)
 
   def spam_clicked(self):
     self.clear_window()
@@ -48,4 +52,8 @@ class Choice:
 
   def subject_clicked(self):
     self.clear_window()
-    project.Project(self.master, self.email)
+    project.EmailViewerApp(self.master, self.email)
+
+  def go_back(self):
+    self.clear_window()
+    choice.Choices(self.master, self.email)
