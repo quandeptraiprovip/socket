@@ -44,7 +44,7 @@ class EmailViewerApp:
       for message in messages:
         self.email_listbox.insert(tk.END, f"{message}")
     
-    print(self.messages_ahihi)
+    print(self.email_addresses_ahihi)
 
     self.sock_ahuu()
     
@@ -204,7 +204,6 @@ class EmailViewerApp:
 
     pop_conn.send(b'UIDL\r\n')
     response = pop_conn.recv(1024).decode()
-    print(response)
 
     for k in range(1, len(message_list.split()), 2):
       if message_list.split()[k] == '.':
@@ -214,11 +213,10 @@ class EmailViewerApp:
       email_data = self.receive_data(pop_conn)
       email_text = email_data.decode()
       email_parts = email_text.split()
-
-      print(email_text)
       
       self.email_content[response.split()[k + 1]] = email_text
-      
+      # print(email_text)
+
       b = ""
       content = ""
       flag = 0
@@ -226,20 +224,19 @@ class EmailViewerApp:
         if part[:4] == "From":
           content += part
           content += email_parts[i+1]
-          i + 1
           content+= '\n'
           print(part.split(":")[1].strip())
-          if part.split(":")[1] not in self.email_addresses_ahihi:
+          if part.split(":")[1].strip() not in self.email_addresses_ahihi:
             self.email_addresses_ahihi.append(part.split(":")[1].strip()) 
             self.messages_ahihi[part.split(":")[1].strip()] = []
           
           self.messages_ahihi[part.split(":")[1].strip()].append(response.split()[k + 1])
-
           continue
           
         if part[:3] == "To:":
           content += part
           content += email_parts[i+1]
+          i + 1
           content += '\n'
           continue
 
@@ -250,6 +247,7 @@ class EmailViewerApp:
           continue
 
         if part[:3] == "+OK":
+          email_parts[i+1] =""
           continue
 
         if part[:4] == "Date":
@@ -262,11 +260,11 @@ class EmailViewerApp:
 
         if part[:7] == "Subject":
           content += part + " " + email_parts[i+1]
-          # print(email_parts[i+1])
+          i = i + 1
           content += '\n\n'
           continue
 
-  def sock_ahihi(self):
+  def sock_ahuu(self):
 
     config = ConfigParser()
     config.read("config.ini")
@@ -296,7 +294,6 @@ class EmailViewerApp:
 
     pop_conn.send(b'UIDL\r\n')
     response = pop_conn.recv(1024).decode()
-    print(response)
 
     for k in range(1, len(message_list.split()), 2):
       if message_list.split()[k] == '.':
@@ -306,11 +303,11 @@ class EmailViewerApp:
       email_data = self.receive_data(pop_conn)
       email_text = email_data.decode()
       email_parts = email_text.split()
-
-      print(email_text)
       
       self.email_content[response.split()[k + 1]] = email_text
       
+      # print(email_text)
+
       b = ""
       content = ""
       flag = 0
@@ -320,18 +317,20 @@ class EmailViewerApp:
           content += email_parts[i+1]
           i + 1
           content+= '\n'
-          print(part.split(":")[1].strip())
-          if part.split(":")[1] not in self.email_addresses_ahuu:
+          if part.split(":")[1].strip() not in self.email_addresses_ahuu:
             self.email_addresses_ahuu.append(part.split(":")[1].strip()) 
             self.messages_ahuu[part.split(":")[1].strip()] = []
           
-          self.messages_ahuu[part.split(":")[1].strip()].append(response.split()[k + 1])
+          if response.split()[k + 1] not in self.messages_ahuu[part.split(":")[1].strip()]:
+            self.messages_ahuu[part.split(":")[1].strip()].append(response.split()[k + 1])
+            self.email_status[response.split()[k + 1]] = "Unread"
 
           continue
           
         if part[:3] == "To:":
           content += part
           content += email_parts[i+1]
+          i + 1
           content += '\n'
           continue
 

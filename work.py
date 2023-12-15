@@ -226,7 +226,7 @@ class Project:
     config.read("config.ini")
     config_data = config["POP3"]
 
-    email_address = "a@gmail.com"
+    email_address = self.email
     password = "your_password"
 
     pop_conn = socket.socket()

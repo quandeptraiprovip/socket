@@ -10,6 +10,7 @@ import choice2
 class Project:
   def __init__(self, master, email):
     self.master = master
+    self.email = email
     master.title("Spam")
     master.geometry("1000x300")
     # Email List
@@ -224,7 +225,7 @@ class Project:
     config.read("config.ini")
     config_data = config["POP3"]
 
-    email_address = "a@gmail.com"
+    email_address = self.email
     password = "your_password"
 
     pop_conn = socket.socket()

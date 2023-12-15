@@ -44,7 +44,7 @@ class Choice:
 
   def important_clicked(self):
     self.clear_window()
-    important.email(self.master, self.email)
+    important.Project(self.master, self.email)
 
   def spam_clicked(self):
     self.clear_window()

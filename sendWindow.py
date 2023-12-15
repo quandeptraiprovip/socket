@@ -4,16 +4,13 @@ import socket
 import base64
 import os
 from datetime import datetime
-import choice
 
 class SendWindow:
   def __init__(self, master, email):
     self.master = master
     master.title("Email Client")
 
-    self.email = email
-
-    for i in range(7):  # Increased the range to accommodate the new row
+    for i in range(8):  # Increased the range to accommodate the new row
       master.columnconfigure(i, weight=1)
       master.rowconfigure(i, weight=1)
 
@@ -23,64 +20,41 @@ class SendWindow:
     self.to_email_entry = tk.Entry(master)
     self.to_email_entry.grid(row=0, column=1, columnspan=4, sticky="ew")
 
-    self.cc_label = tk.Label(master, text="Cc:")
-    self.cc_label.grid(row=1, column=0, sticky="e")
-
-    self.cc_email_entry = tk.Entry(master)
-    self.cc_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
-
     self.bcc_label = tk.Label(master, text="Bcc:")
-    self.bcc_label.grid(row=2, column=0, sticky="e")
+    self.bcc_label.grid(row=1, column=0, sticky="e")
 
     self.bcc_email_entry = tk.Entry(master)
-    self.bcc_email_entry.grid(row=2, column=1, columnspan=4, sticky="ew")
+    self.bcc_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
 
     self.from_label = tk.Label(master, text="From:")
-    self.from_label.grid(row=1, column=0, sticky="e")
+    self.from_label.grid(row=2, column=0, sticky="e")
 
     self.from_email_entry = tk.Entry(master)
-    self.from_email_entry.grid(row=1, column=1, columnspan=4, sticky="ew")
+    self.from_email_entry.grid(row=2, column=1, columnspan=4, sticky="ew")
     self.from_email_entry.insert(0, f"{email}")
 
     self.subject_label = tk.Label(master, text="Subject:")
-    self.subject_label.grid(row=2, column=0, sticky="e")
+    self.subject_label.grid(row=3, column=0, sticky="e")
 
     self.subject_entry = tk.Entry(master)
-    self.subject_entry.grid(row=2, column=1, columnspan=4, sticky="ew")
+    self.subject_entry.grid(row=3, column=1, columnspan=4, sticky="ew")
 
     self.content_label = tk.Label(master, text="Email Content:")
-    self.content_label.grid(row=3, column=0, sticky="ne")
+    self.content_label.grid(row=4, column=0, sticky="ne")
 
     self.email_content_text = tk.Text(master, wrap="word", width=40, height=10)
-    self.email_content_text.grid(row=3, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
+    self.email_content_text.grid(row=4, column=1, columnspan=4, padx=10, pady=10, sticky="nsew")
 
     self.attach_button = tk.Button(master, text="Attach File", command=self.attach_file)
-    self.attach_button.grid(row=4, column=1, columnspan=2, sticky="ew")
+    self.attach_button.grid(row=5, column=1, columnspan=2, sticky="ew")
 
     self.attached_files_list = []
     self.attached_files = tk.StringVar()
     self.attached_files_label = tk.Label(master, textvariable=self.attached_files, wraplength=400)
-    self.attached_files_label.grid(row=4, column=3, columnspan=2, sticky="ew")
-
-    self.recipient_type_var = tk.StringVar(value="To")
-    self.recipient_type_menu = tk.OptionMenu(master, self.recipient_type_var, "To", "Cc", "Bcc")
-    self.recipient_type_menu.grid(row=7, column=4, sticky="e")
+    self.attached_files_label.grid(row=5, column=3, columnspan=2, sticky="ew")
 
     self.send_button = tk.Button(master, text="Send", command=self.send_email)
-    self.send_button.grid(row=5, column=1, columnspan=3, sticky="ew")
-
-    self.back_button = tk.Button(master, text="Back", command=self.go_back)
-    self.back_button.grid(row=0, column=6, sticky="e")
-
-
-  def clear_window(self):
-    # Destroy all widgets in the window
-    for widget in self.master.winfo_children():
-        widget.destroy()
-
-  def go_back(self):
-     self.clear_window()
-     choice.Choices(self.master, self.email)
+    self.send_button.grid(row=6, column=1, columnspan=3, sticky="ew")
 
   def attach_file(self):
     file_paths = filedialog.askopenfilenames()
@@ -91,7 +65,6 @@ class SendWindow:
 
   def send_email(self):
     to_addresses = self.to_email_entry.get().split(',')
-    cc_addresses = self.cc_email_entry.get().split(',')
     bcc_addresses = self.bcc_email_entry.get().split(',')
     from_email = self.from_email_entry.get()
     subject = self.subject_entry.get()
@@ -99,7 +72,6 @@ class SendWindow:
     files = self.attached_files_list
 
     print("To: ", to_addresses)
-    print("Cc: ", cc_addresses)
     print("Bcc: ", bcc_addresses)
     print("From: ", from_email)
     print("Subject: ", subject)
@@ -117,33 +89,18 @@ class SendWindow:
     recv1 = s.recv(1024).decode() 
     print(recv1)
 
-
-    for to_email in to_addresses:
-            s.send(f'RCPT TO: <{to_email}>\r\n'.encode())
-            recv1 = s.recv(1024).decode() 
-            print(recv1)
-
-    for cc_email in cc_addresses:
-        s.send(f'RCPT TO: <{cc_email}>\r\n'.encode())
-        recv1 = s.recv(1024).decode()
-        print(recv1)
-
-    if self.recipient_type_var.get() == "Bcc":
-        s.send(b'RCPT TO: <undisclosed-recipients: ;>\r\n')
-        recv1 = s.recv(1024).decode()
-        print(recv1)
-    else:
-        for bcc_email in bcc_addresses:
-            s.send(f'RCPT TO: <{bcc_email}>\r\n'.encode())
-            recv1 = s.recv(1024).decode()
-            print(recv1)
+    if bcc_addresses:
+      for bcc_email in bcc_addresses:
+          s.send(f'RCPT TO: <{bcc_email}>\r\n'.encode())
+          recv1 = s.recv(1024).decode()
+          print(recv1)
 
     s.send(b'DATA\r\n')
     recv1 = s.recv(1024).decode() 
     print(recv1)
 
     current_datetime = datetime.now()
-    formatted_datetime = current_datetime.strftime("%Y/%m/%d_%H:%M:%S")
+    formatted_datetime = current_datetime.strftime("Date: %Y/%m/%d_%H:%M:%S")
 
 
 
@@ -178,3 +135,12 @@ class SendWindow:
     s.close()
 
     self.attached_files_list.clear()
+
+
+def main():
+  root = tk.Tk()
+  app = SendWindow(root, "abc")
+  root.mainloop()
+
+if __name__ == "__main__":
+  main()
