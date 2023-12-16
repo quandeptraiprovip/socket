@@ -78,7 +78,7 @@ class SendWindow:
     self.attached_files.set(", ".join(self.attached_files_list))
 
   def send_email(self):
-    to_addresses = self.to_email_entry.get().split(',')
+    to_addresses = self.to_email_entry.get()
     bcc_addresses = self.bcc_email_entry.get().split(',')
     from_email = self.from_email_entry.get()
     subject = self.subject_entry.get()
@@ -101,6 +101,10 @@ class SendWindow:
 
     s.send(f'MAIL FROM: <{from_email}>\r\n'.encode())
     recv1 = s.recv(1024).decode() 
+    print(recv1)
+
+    s.send(f'RCPT TO: <{to_addresses}>\r\n'.encode())
+    recv1 = s.recv(1024).decode()
     print(recv1)
 
     if bcc_addresses:
