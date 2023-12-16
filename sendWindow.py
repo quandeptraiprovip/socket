@@ -4,11 +4,13 @@ import socket
 import base64
 import os
 from datetime import datetime
+import choice
 
 class SendWindow:
   def __init__(self, master, email):
     self.master = master
     master.title("Email Client")
+    self.email = email
 
     for i in range(8):  # Increased the range to accommodate the new row
       master.columnconfigure(i, weight=1)
@@ -55,6 +57,18 @@ class SendWindow:
 
     self.send_button = tk.Button(master, text="Send", command=self.send_email)
     self.send_button.grid(row=6, column=1, columnspan=3, sticky="ew")
+
+    self.back_button = tk.Button(master, text="Back", command=self.go_back)
+    self.back_button.grid(row=7, column=1, columnspan=2, sticky="ew")
+
+  def clear_window(self):
+    for widget in self.master.winfo_children():
+        widget.destroy()
+
+  def go_back(self):
+    self.clear_window()
+    choice.Choices(self.master, self.email)
+
 
   def attach_file(self):
     file_paths = filedialog.askopenfilenames()
