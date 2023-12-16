@@ -11,7 +11,7 @@ class EmailViewerApp:
   def __init__(self, master, email):
     self.master = master
     master.title("Email Viewer")
-    # master.geometry("1000x300")
+    master.geometry("1000x300")
 
     self.email = email
 
@@ -19,6 +19,11 @@ class EmailViewerApp:
     self.email_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
     self.email_listbox.pack(side=tk.LEFT, fill=tk.Y)
     self.email_listbox.bind('<<ListboxSelect>>', self.show_email_content)
+
+    # Message List
+    # self.message_listbox = tk.Listbox(master, selectmode=tk.SINGLE)
+    # self.message_listbox.pack(side=tk.LEFT, fill=tk.Y)
+    # self.message_listbox.bind('<<ListboxSelect>>', self.show_email_content)
 
     # Email Content
     self.email_content_text = tk.Text(master, wrap=tk.WORD, height=10, width=40)
@@ -29,31 +34,33 @@ class EmailViewerApp:
 
     # Initialize data (replace this with actual data retrieval logic)
     self.tk_image = None
-    self.email_addresses_ahihi = []
-    self.messages_ahihi = {}
-    self.email_addresses_ahuu = []
-    self.messages_ahuu = {}
+    self.email_addresses = []
+    self.messages = {}
     self.email_content = {}
     self.email_status = {}
-    self.sock_ahihi()
-
-    self.email_listbox.insert(tk.END, "-- ahihi@testing.com --")
-    for email in self.email_addresses_ahihi:
-      self.email_listbox.insert(tk.END, email)
-      messages = self.messages_ahihi.get(email, [])
-      for message in messages:
-        self.email_listbox.insert(tk.END, f"{message}")
+    self.email_client = {}
+    self.email_client[self.email] = {}
+    self.ahihu = []
     
-    print(self.messages_ahihi)
+    self.read_file()
+    self.sock()
+    # print(self.messages)
+    # print(self.ahihu)
 
-    self.sock_ahuu()
+    # config = ConfigParser()
+    # config.read("config.ini")
+    # config_data = config["AutoUpdate"]
+
+    all_messages = list(self.messages.keys())
+    for str in all_messages:
+      self.email_listbox.insert(tk.END, str)
+
+
+
     
-    self.email_listbox.insert(tk.END, "-- ahuu@testing.com --")
-    for email in self.email_addresses_ahuu:
-      self.email_listbox.insert(tk.END, email)
-      messages = self.messages_ahuu.get(email, [])
-      for message in messages:
-        self.email_listbox.insert(tk.END, f"{message}")
+    # self.auto_check_interval = config_data["time"]
+
+    # self.master.after(0, self.auto_check_and_update)
 
   def clear_window(self):
     for widget in self.master.winfo_children():
@@ -63,10 +70,20 @@ class EmailViewerApp:
     self.clear_window()
     choice2.Choice(self.master, self.email)
 
+  def read_file(self):
+    file = open("ahihu.txt", "r")
+    parts = file.read()
+
+    all_parts = parts.split("---")
+
+    email = ""
+    for i in range(0, all_parts.len()):
+        self.ahihu.append(all_parts[i])
+      
   def auto_check_and_update(self):
     # Perform the email check here
     self.sock()
-    print(self.email_addresses)
+    # print(self.email_addresses)
 
     # Clear and repopulate the email_listbox with updated data
     self.email_listbox.delete(0, tk.END)
@@ -75,6 +92,8 @@ class EmailViewerApp:
 
     # Schedule the next auto-check and update
     self.master.after(self.auto_check_interval, self.auto_check_and_update)
+
+
 
   def check(self, base64_string):
     try:
@@ -102,6 +121,9 @@ class EmailViewerApp:
     if b.startswith('data:image'):
       b = b.split(',')[1]
 
+    # print("1")
+    # print(b)
+
     try:
       image_data = base64.b64decode(b)
       image_buffer = BytesIO(image_data)
@@ -115,16 +137,19 @@ class EmailViewerApp:
     self.message_listbox.delete(message_index, message_index)
     self.message_listbox.insert(message_index, message.split('●')[0])
 
+  def show_messages(self, event):
+    ...
+
 
   def show_email_content(self, event):
     selected_message_index = self.email_listbox.curselection()
     if selected_message_index:
       selected_message = self.email_listbox.get(selected_message_index)
-      email_content = self.email_content.get(selected_message.split('●')[0], "")
+      email_content = self.messages[selected_message]
 
       parts = email_content.partition("Content-Type:")
 
-      self.email_content_text.delete(1.0, tk.END)  # Clear previous content
+      self.email_content_text.delete(1.0, tk.END) # Clear previous content
       self.email_content_text.insert(tk.END, parts[0][8:])
 
       b = ""
@@ -159,7 +184,8 @@ class EmailViewerApp:
             # print(b)
             b = ""
 
-      self.email_status[selected_message.split('●')[0]] = "Read"
+      # self.email_status[selected_message.split('●')[0]] = "Read"
+      # self.email_client[self.email][selected_message.split('●')[0]] = "Read"
       # self.update_email_list(selected_message_index, selected_message)
 
     
@@ -173,196 +199,39 @@ class EmailViewerApp:
         break
 
     return email_data
+  
 
-  def sock_ahihi(self):
+  def read_file(self):
+    file = open("ahihu.txt", "r")
+    parts = file.read()
 
-    config = ConfigParser()
-    config.read("config.ini")
-    config_data = config["POP3"]
-    email_address = "ahihi@testing.com"
-    password = "your_password"
+    if parts == "":
+      return
 
-    pop_conn = socket.socket()
-    pop_conn.connect(("localhost", int(config_data["port"])))
+    all_parts = parts.split("---")
 
-    recv = pop_conn.recv(1024).decode()
-    print(recv)
+    for i in range(0, len(all_parts)):
+      self.ahihu.append(all_parts[i])
 
-    pop_conn.send(f'USER {email_address}\r\n'.encode())
-    print(pop_conn.recv(1024).decode())
+    file.close()
 
-    pop_conn.send(f'PASS {password}\r\n'.encode())
-    print(pop_conn.recv(1024).decode())
-
-    pop_conn.sendall(b'STAT\r\n')
-    response = pop_conn.recv(1024).decode()
-    print(response)
-
-    pop_conn.send(b'LIST\r\n')
-    message_list = pop_conn.recv(1024).decode()
-    print(message_list)
-
-    pop_conn.send(b'UIDL\r\n')
-    response = pop_conn.recv(1024).decode()
-    print(response)
-
-    for k in range(1, len(message_list.split()), 2):
-      if message_list.split()[k] == '.':
-        continue
-
-      pop_conn.send(f'RETR {message_list.split()[k]}\r\n'.encode())
-      email_data = self.receive_data(pop_conn)
-      email_text = email_data.decode()
-      email_parts = email_text.split()
-
-      print(email_text)
-      
-      self.email_content[response.split()[k + 1]] = email_text
-      
-      b = ""
-      content = ""
-      flag = 0
-      for i, part in enumerate(email_parts):
-        if part[:4] == "From":
-          content += part
-          content += email_parts[i+1]
-          i + 1
-          content+= '\n'
-          print(part.split(":")[1].strip())
-          if part.split(":")[1] not in self.email_addresses_ahihi:
-            self.email_addresses_ahihi.append(part.split(":")[1].strip()) 
-            self.messages_ahihi[part.split(":")[1].strip()] = []
+  def sock(self):
+    for content in self.ahihu:
+      for str in content.split():
+        name = ""
+        if str == '' or str == '\n':
+          ...
+        if str[:2] == "To":
           
-          self.messages_ahihi[part.split(":")[1].strip()].append(response.split()[k + 1])
+          name = str[3:]
 
-          continue
-          
-        if part[:3] == "To:":
-          content += part
-          content += email_parts[i+1]
-          content += '\n'
-          continue
+          self.messages[name] = content
 
-        if part == "":
-          continue
-
-        if part[:4] == "name" or part[:8] == "filename":
-          continue
-
-        if part[:3] == "+OK":
-          continue
-
-        if part[:4] == "Date":
-          email_parts[i + 1] = ""
-          content += part
-          content += email_parts[i + 2]
-          content += '\n'
-          email_parts[i+2] = ""
-          continue
-
-        if part[:7] == "Subject":
-          content += part + " " + email_parts[i+1]
-          # print(email_parts[i+1])
-          content += '\n\n'
-          continue
-
-  def sock_ahihi(self):
-
-    config = ConfigParser()
-    config.read("config.ini")
-    config_data = config["POP3"]
-    email_address = "ahuu@testing.com"
-    password = "your_password"
-
-    pop_conn = socket.socket()
-    pop_conn.connect(("localhost", int(config_data["port"])))
-
-    recv = pop_conn.recv(1024).decode()
-    print(recv)
-
-    pop_conn.send(f'USER {email_address}\r\n'.encode())
-    print(pop_conn.recv(1024).decode())
-
-    pop_conn.send(f'PASS {password}\r\n'.encode())
-    print(pop_conn.recv(1024).decode())
-
-    pop_conn.sendall(b'STAT\r\n')
-    response = pop_conn.recv(1024).decode()
-    print(response)
-
-    pop_conn.send(b'LIST\r\n')
-    message_list = pop_conn.recv(1024).decode()
-    print(message_list)
-
-    pop_conn.send(b'UIDL\r\n')
-    response = pop_conn.recv(1024).decode()
-    print(response)
-
-    for k in range(1, len(message_list.split()), 2):
-      if message_list.split()[k] == '.':
-        continue
-
-      pop_conn.send(f'RETR {message_list.split()[k]}\r\n'.encode())
-      email_data = self.receive_data(pop_conn)
-      email_text = email_data.decode()
-      email_parts = email_text.split()
-
-      print(email_text)
-      
-      self.email_content[response.split()[k + 1]] = email_text
-      
-      b = ""
-      content = ""
-      flag = 0
-      for i, part in enumerate(email_parts):
-        if part[:4] == "From":
-          content += part
-          content += email_parts[i+1]
-          i + 1
-          content+= '\n'
-          print(part.split(":")[1].strip())
-          if part.split(":")[1] not in self.email_addresses_ahuu:
-            self.email_addresses_ahuu.append(part.split(":")[1].strip()) 
-            self.messages_ahuu[part.split(":")[1].strip()] = []
-          
-          self.messages_ahuu[part.split(":")[1].strip()].append(response.split()[k + 1])
-
-          continue
-          
-        if part[:3] == "To:":
-          content += part
-          content += email_parts[i+1]
-          content += '\n'
-          continue
-
-        if part == "":
-          continue
-
-        if part[:4] == "name" or part[:8] == "filename":
-          continue
-
-        if part[:3] == "+OK":
-          continue
-
-        if part[:4] == "Date":
-          email_parts[i + 1] = ""
-          content += part
-          content += email_parts[i + 2]
-          content += '\n'
-          email_parts[i+2] = ""
-          continue
-
-        if part[:7] == "Subject":
-          content += part + " " + email_parts[i+1]
-          # print(email_parts[i+1])
-          content += '\n\n'
-          continue
-
-
+  
 
 def main():
   root = tk.Tk()
-  app = EmailViewerApp(root, "dcm")
+  app = EmailViewerApp(root, "abc")
   root.mainloop()
 
 if __name__ == "__main__":
